@@ -5,10 +5,26 @@ format: html
 editor: visual
 ---
 
-# Edir 
+## LIBRARIES FOR EVERYONE
 
-# Thea 
+```{r}
+library(tidyverse)
+```
+
+# Edir
+
+# Thea
 
 # Nitjay
 
-# Morten 
+Here is some random r code
+
+```{r}
+x <- 1:10
+y <- 2:11
+sum = x+y
+print(sum)
+
+```
+
+# Morten
