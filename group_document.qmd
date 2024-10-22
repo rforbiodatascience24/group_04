@@ -5,13 +5,15 @@ format: html
 editor: visual
 ---
 
-# Edir 
+# Edir
 
-# Thea 
+Hola buenos dias
+
+# Thea
 
 # Nitjay
 
-# Morten 
+# Morten
 
 ```{r}
 library(tidyverse)
