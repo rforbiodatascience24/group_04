@@ -1,0 +1,169 @@
+---
+title: "Lab07 group 4 hand-in"
+format: html
+editor: visual
+execute: 
+  eval: true
+  echo: true
+  warning: false
+  error: false
+---
+
+## Group 04:
+
+-   Edir Sebastian Vidal Castro (s243564),
+-   Morten Orebo Holmström (s242223),
+-   Nithiyashri Jayashankar (s244356),
+-   Tilman Johannes Nelissen (s233043),
+-   Thea Rehm Rosholm (s225019)
+
+Loading of packages
+
+```{r}
+library(tidyverse)
+library(patchwork)
+library(RColorBrewer)
+library(ggrepel)
+library(here)
+library(broom)
+```
+
+Making the PCA First we need to load the data which is the cleaned and augmented data.
+
+```{r}
+data <- read_tsv(file = here("data/gravier_clean_aug.tsv.gz"))
+```
+
+Principal component analysis should be performed on numeric, normalized variables. so we need to select only numeric variables and then `scale` the data so they are normalized. `early_metastasis` is actually numeric, but it could be a factor, so we deselect that one.
+
+```{r}
+data_for_pca <- data |>
+  select(-early_metastasis) |> 
+  scale()
+```
+
+Then we apply the `base` function `prcomp` to the data that have been normalized and selected only for numeric variables.
+
+```{r}
+pca_object <- data_for_pca |> 
+  prcomp()
+```
+
+Firstly we need to map each observation on the two first principal component where we map the fitted PC values for each observation. We use the `broom:augment` to get the fitted values and apply them to the data.
+
+```{r}
+data_augmented <- pca_object |> 
+  augment(data = data)
+```
+
+So now each observation in `data` have a fitted value for each principal component. According to theory, the biggest variation is explained by the first principal components, so we plot the fitted values for PC1 and PC2 on a plot where we label the points with the `early_metastasis` variable.
+
+```{r}
+data_augmented <- data_augmented |> 
+  mutate(early_metastasis = factor(early_metastasis))
+
+ggplot(data = data_augmented, 
+       mapping = aes(x = .fittedPC1, 
+                     y = .fittedPC2, 
+                     fill = early_metastasis)) + 
+  geom_point(shape = 21, 
+             color = "black", 
+             alpha = 0.6, 
+             size = 2) + 
+  scale_fill_discrete(labels = c("No", "Yes")) +
+  labs(title = "Principle component analysis of the Gravier dataset", 
+       x = "PC1", 
+       y = "PC2", 
+       fill = "Early metastasis") + 
+  scale_fill_discrete(labels = c("No", "Yes")) +
+  theme_bw()  
+  
+```
+
+### Getting the rotations
+
+We now get the rotations from the PCA object by applying `tidy` to the PCA object
+
+```{r}
+data_rotation <- pca_object |> 
+  tidy("rotation")
+```
+
+We need to `pivot_wider` on the `PC` variable where we add the `names_prefix` as ´PC\` to so we get the right labelling of the columns.
+
+```{r}
+data_rotation_wide <- data_rotation |> 
+  pivot_wider(names_from = "PC", 
+              values_from = "value", 
+              names_prefix = "PC")
+```
+
+It would not make sense to plot the loadings of all genes, as we have more than 2000 genes, but we select with the highest loadings in PC1 PC2 and plot them using geom_segment. A way to select these would be to select the PC1 and PC2 columns and sum these. However, some PC loadings are negative, so the summation would cancel the effect out. Hence, we square each value of PC1 and PC2, sum them and then take the square root of these. Then we take out the top 10 of the squared values.
+
+```{r}
+top_PC_genes <- data_rotation_wide |> 
+  select(column, PC1, PC2) |> 
+  mutate(squared_pcs = sqrt(PC1^2 + PC2^2)) |> 
+  arrange(desc(squared_pcs)) |> 
+  slice_head(n = 10)
+```
+
+Then we plot the PCs
+
+```{r}
+arrow_style <- arrow(
+  angle = 20, ends = "first", type = "closed", length = grid::unit(8, "pt")
+)
+
+
+ggplot(data = top_PC_genes, 
+       mapping = aes(x = PC1, 
+                     y = PC2)) +
+  geom_segment(xend = 0, yend = 0, arrow = arrow_style) + 
+  geom_label_repel(aes(label = column,
+                       max.overlaps = Inf, 
+                       force = 3)
+                   ) + 
+  theme_minimal() + 
+  labs(title = "Rotations")
+```
+
+The last thing is the determine how many clusters we should operate with. To ascertain this we need to extract the "eigenvalues".
+
+```{r}
+data_eigen <- pca_object |> 
+  tidy("eigenvalues")
+```
+
+We want to make a barplot, where we show the percent on the y-axis and then look for the "elbow-point" where the percent decreases drastically. So we make a simple ggplot with `geom_col`. We have more than 100 PCs so we just select for the first 15 as these explain approximately 50 % of the total variance. We can show this by the plot below.
+
+```{r}
+ggplot(data = data_eigen, 
+       mapping = aes(x = PC, 
+                     y = cumulative)) + 
+  geom_col(color = "black", 
+           fill = "cornflowerblue") + 
+  geom_hline(yintercept = 0.5) + 
+  scale_x_continuous(limits = c(0,50)) + 
+  labs(title = "Cumulative variance explained by the different PCs",
+       y = "Fraction cumulative variance", 
+       x = "PC number") +
+  theme_bw()
+```
+
+The horizontal line at the fraction of 50 % shows that the first 15 components explain 50% of the variance, so we zoom in on these in the analysis below, where we plot the variance that each principal component explains
+
+```{r}
+data_eigen |> 
+  filter(PC < 16) |> 
+ggplot(mapping = aes(x = PC, 
+                     y = percent)) + 
+  geom_col(fill = "cornflowerblue", color = "black") +
+  labs(title = "Scree plot of the principal components of the Gravier dataset", 
+       x = "PC number", 
+       y = "Fraction variance") +
+  theme_minimal() +
+  geom_hline(yintercept = 0)
+```
+
+We find there is a small infliction/elbow point between PC2 and PC3, which actually fits pretty well with the first plot where we plotted the fitted PC-values. This showed a tendency to two clusters, however the `early_metastasis` variable did not explain the clustering.
