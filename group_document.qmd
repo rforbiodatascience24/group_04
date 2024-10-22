@@ -31,6 +31,12 @@ print('Hello world')
 2+2*5*222
 ```
 
+## New feature:
+
+```{r}
+print('Tiamisu')
+```
+
 # Nitjay
 
 Here is some random r code
@@ -43,6 +49,16 @@ print(sum)
 
 ```
 
+##### NEW ANALYSIS 
+
+Here is the new analysis
+
+```{r}
+z <- 2+2
+z-4 
+z
+```
+
 # Morten
 
 ```{r}
@@ -51,5 +67,15 @@ library(tidyverse)
 ggplot(data = iris, 
        mapping = aes(x = Sepal.Length, 
                      y = Petal.Length)) + 
+  geom_point()
+```
+
+New analysis
+
+```{r}
+ggplot(data = mpg, 
+       mapping = aes(x = cty, 
+                     y = hwy, 
+                     color = as.factor(cyl))) + 
   geom_point()
 ```
