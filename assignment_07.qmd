@@ -1,0 +1,13 @@
+---
+title: "Assignment Week 7"
+format: html
+editor: visual
+---
+
+## Group 04:
+
+-   Edir Sebastian Vidal Castro (s243564),
+-   Morten Orebo Holmström (s242223),
+-   Nithiyashri Jayashankar (s244356),
+-   Tilman Johannes Nelissen (s233043),
+-   Thea Rehm Rosholm (s225019)
