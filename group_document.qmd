@@ -5,6 +5,7 @@ format: html
 editor: visual
 ---
 
+<<<<<<< HEAD
 ## LIBRARIES FOR EVERYONE
 
 ```{r}
@@ -12,6 +13,11 @@ library(tidyverse)
 ```
 
 # Edir
+=======
+# Edir
+
+Hola buenos dias
+
 
 # Thea
 
@@ -29,7 +35,6 @@ print(sum)
 
 # Morten
 
-# Morten
 
 ```{r}
 library(tidyverse)
