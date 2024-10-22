@@ -35,6 +35,16 @@ print(sum)
 
 ```
 
+##### NEW ANALYSIS 
+
+Here is the new analysis
+
+```{r}
+z <- 2+2
+z-4 
+z
+```
+
 # Morten
 
 ```{r}
