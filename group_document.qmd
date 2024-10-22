@@ -5,8 +5,6 @@ format: html
 editor: visual
 ---
 
-\<\<\<\<\<\<\< HEAD \## LIBRARIES FOR EVERYONE
-
 ```{r}
 library(tidyverse)
 ```
