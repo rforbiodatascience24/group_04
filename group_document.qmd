@@ -1,0 +1,14 @@
+---
+title: "group_document"
+author: "group 04"
+format: html
+editor: visual
+---
+
+# Edir 
+
+# Thea 
+
+# Nitjay
+
+# Morten 
