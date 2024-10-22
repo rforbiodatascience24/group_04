@@ -33,8 +33,6 @@ print(sum)
 
 # Morten
 
-> > > > > > > 8fadc22dbecb443504ce00a16305eb1d569b9f43
-
 ```{r}
 library(tidyverse)
 
