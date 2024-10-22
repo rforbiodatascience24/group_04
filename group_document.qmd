@@ -13,8 +13,7 @@ library(tidyverse)
 ```
 
 # Edir
-=======
-# Edir
+
 
 Hola buenos dias
 
