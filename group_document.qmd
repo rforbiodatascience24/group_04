@@ -59,3 +59,13 @@ ggplot(data = iris,
                      y = Petal.Length)) + 
   geom_point()
 ```
+
+New analysis
+
+```{r}
+ggplot(data = mpg, 
+       mapping = aes(x = cty, 
+                     y = hwy, 
+                     color = as.factor(cyl))) + 
+  geom_point()
+```
