@@ -5,10 +5,16 @@ format: html
 editor: visual
 ---
 
-# Edir 
+# Edir
 
-# Thea 
+# Thea
+```{r}
+print("hello world")
+```
+```{r}
+2+2+5*9999
+```
 
 # Nitjay
 
-# Morten 
+# Morten
