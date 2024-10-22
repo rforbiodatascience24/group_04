@@ -6,6 +6,6 @@ Top 10 Bio Data Science Languages of ALL Time:
 6. programming is subjective
 5. and everyone
 4. has
-3. c++
-2. python
-1. Scrach
+3. different
+2. tastes
+1. Scala
