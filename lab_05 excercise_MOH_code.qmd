@@ -1,0 +1,690 @@
+---
+title: "Lab_05 Group 4 Assignment"
+format: html
+editor: visual
+execute: 
+  warning: false
+---
+
+### Group Exercise from Group 4
+
+-   Edir Sebastian Vidal Castro (s243564dfgd),
+-   Morten Orebo Holmström (s242223),
+-   Nithiyashri Jayashankar (s244356),
+-   Tilman Johannes Nelissen (s233043),
+-   Thea Rehm Rosholm (s225019)
+
+### Load libraries
+
+```{r}
+library("tidyverse")
+library("ggseqlogo")
+library("table1")
+library("here")
+```
+
+### Background
+
+In the early 20s, the world was hit by the coronavirus disease 2019 (COVID-19) pandemic. The pandemic was caused by severe acute respiratory syndrome coronavirus 2 (SARS-CoV-2). In Denmark, the virus first confirmed case was on 27 February 2020.
+
+While initially very little was known about the SARS-CoV-2 virus, we did know the general pathology of vira. Briefly, the virus invades the cells and hijacks the intra-cellular machinery. Using the hijacked machinery, components for new virus particles are produced, eventually being packed into the viral envelope and released from the infected cell. Some of these components, viral proteins, is broken down into smaller fragments called peptides by the proteasome. These peptides are transported into the endoplasmic reticulum by the Transporter Associated with antigen Processing (TAP) protein complex. Here, they are aided by chaperones bound to the Major Histocompatilibty Complex class I (MHC-I) and then across the Golgi apparatus they finally get displayed on the surface of the cells. Note, in humans, MHC is also called Human Leukocyte Antigen (HLA) and represents the most diverse genes. Each of us have a total of 6 HLA-alleles, 3 from the maternal and 3 from the paternal side. These are further divided into 3 classes HLA-A, HLA-B and HLA-C and the combination of these constitute the HLA-haplotype for an individual. Once the peptide is bound to the MHC class I at the cell surface and exposed, the MHC-I peptide complex can be recognised by CD8+ Cytotoxic T-Lymphocytes (CTLs) via the T-cell Receptor (TCR). If a cell displays peptides of viral origin, the CTL gets activated and via a cascade induces apoptosis (programmed cell death) of the infected cell. The process is summarised in the figure below (McCarthy and Weinberg 2015).
+
+![](images/clipboard-1946091696.png)
+
+The data we will be working with today contains data on sequenced T-cell receptors, viral antigens, HLA-haplotypes and clinical meta data for a cohort:
+
+“A large-scale database of T-cell receptor beta (TCR ) sequences and binding associations from natural and synthetic exposure to SARS-CoV-2” (Nolan et al. 2020).
+
+### Aim
+
+Today, we will emulate the situation, where you are working as a Bioinformatician / Bio Data Scientist and you have been given the data and the task of answering these two burning questions:
+
+What characterises the peptides binding to the HLAs? What characterises T-cell Receptors binding to the pMHC-complexes?
+
+# Load data
+
+```{r}
+peptide_data <- read_csv(file = here("data/peptide-detail-ci.csv.gz"))
+meta_data <- read_csv(file = here("data/subject-metadata.csv"), na = "N/A")
+
+```
+
+LESSON: If you know how NAs are encoded in the dataset you import then you can assing these as NAs when you import. Just use the function `na = "expression` inside the `read_*` function.
+
+# Description of data/exploratory data analysis
+
+We look at the metadata using `sample_n()` to get a random sample of data from the dataframe.
+
+```{r}
+meta_data |> 
+sample_n(10)
+```
+
+As there are 30 columns/variables.
+
+```{r}
+dim(meta_data)
+```
+
+And there are 144 observations.
+
+# Q2
+
+Yes, there are groupings in the variables - the HLA-alleles A, B, C and the class II alleles. Re-creation of the plot. We use the ´Cohort`on the axis use the`geom_bar`geom. We then dodge on`Gender\`.
+
+```{r}
+meta_data |> 
+  filter(Gender %in% c("F", "M")) |>
+ggplot(mapping = aes(x = Cohort, 
+                     fill = Gender)) + 
+  geom_bar(position = position_dodge(preserve = "single"), 
+           alpha = 0.5,
+           color = "black") +
+  theme_bw() +
+  theme(axis.text.x = element_text(angle = 10, hjust = 1)) +
+  labs(y = "n") +
+  theme(panel.grid.major.x = element_blank()) +
+  theme(legend.position = "bottom") +
+  theme(panel.border = element_blank(), panel.grid.major.x = element_blank()) +
+  geom_hline(yintercept = 0) + 
+  theme(axis.ticks = element_blank()) + 
+  theme(axis.text.x = element_text(hjust = 1)) + 
+  theme(axis.text.x = element_text(vjust = 1.3))
+
+```
+
+LESSON: Here is to use the ´preserve = "single"´ inside the ´position_dodge´ if we have one group mapped to fill that does not have any observations. Additionally, we use theme(panel.grid.major.x = element_blank()) to modulate the gridlines in the plot.
+
+# T2
+
+Creating that plot we need to create a new variable termes ´age_group`by using the`cut()`function.  But as`Age\`apparently is a character here we need to convert it to numeric.
+
+```{r}
+meta_data$Age <- as.numeric(meta_data$Age)
+
+```
+
+And then we use the cut command cutting in 10 year intervals between 20 years and 80 years.
+
+```{r}
+meta_data <- meta_data |> 
+  mutate(Age_group = cut(Age, breaks = c(20, 30, 40, 50, 60, 70, 80)))
+```
+
+LESSON: Use the `cut` command to separate into new groups depending on a numeric variable.
+
+Checking
+
+```{r}
+meta_data |> 
+  select(Age, Age_group)
+
+```
+
+Looking good. Now plotting on Age_group with fill on Gender
+
+```{r}
+meta_data |> 
+  filter(!is.na(Age_group)) |> 
+  filter(!Gender == "N/A") |> 
+ggplot(mapping = aes(x = Age_group,
+                     fill = Gender)) + 
+  geom_bar(position = position_dodge(),
+           alpha = 0.5, 
+           color = "black") +
+  theme_bw() + 
+  labs(y = "n") + 
+  theme(panel.border = element_blank(), panel.grid.major.x = element_blank()) +
+  geom_hline(yintercept = 0) + 
+  theme(legend.position = "bottom")  + 
+  theme(axis.ticks = element_blank()) +
+  theme(axis.text.x = element_text(vjust = 5)) 
+  
+
+
+
+
+```
+
+Skipping the random variables `Subject`, `Cell Type` and `Target Type` by the `select`command.
+
+```{r}
+meta_data <- meta_data |> 
+  select(-c(`Cell Type`, Subject, `Target Type`))
+```
+
+# T3:
+
+Look at the data and create yet another plot as you see fit. Also skip the redundant variables `Subject`, `Cell Type` and `Target Type`
+
+It can also be classified depending of the `race` variable:
+
+```{r}
+meta_data |> 
+  select(c(Race, Gender)) |>
+  filter(Gender != "N/A" & Race != "N/A") |>
+  ggplot(aes(y = Race,
+             fill = Gender)) +
+  geom_bar(alpha = 0.6, 
+           position = position_dodge(preserve = "single"), 
+           colour = "black")  + 
+  theme_bw() + 
+  theme(legend.position = "bottom") + 
+  theme(panel.border = element_blank()) + 
+  geom_vline(xintercept = 0) +
+  labs(y = "")
+  
+```
+
+# Making Table 1
+
+Making the table using the package `table1`.
+
+```{r}
+library("table1") # <= Yes, this should normally go at the beginning!
+meta_data |>
+  mutate(Gender = factor(Gender),
+         Cohort = factor(Cohort)) |>
+  table1(x = formula(~ Gender + Age + Race | Cohort),
+         data = _)
+```
+
+# T4
+
+Wrangling by removing all HLA-II allele using the contains inside `select` to remove variables with DQ, DP or DR.
+
+```{r}
+meta_data <- meta_data |> 
+  select(-contains(c("DQ", "DP", "DR"))) 
+```
+
+Then we rename the HLA-I alleles according to how the column name end.
+
+```{r}
+meta_data <- meta_data |> 
+  rename(A1 = ends_with("9"),
+         A2 = ends_with("10"),
+         B1 = ends_with("11"),
+         B2 = ends_with("12"),
+         C1 = ends_with("13"),
+         C2 = ends_with("14"))
+         
+
+```
+
+## Peptide dataset
+
+#Q3 Using dim(peptide_data)
+
+```{r}
+dim(peptide_data)
+```
+
+So we have 154320 observations with 7 variables.
+
+We now compress the peptide_data as a .gz file.
+
+```{r}
+write_csv(x = peptide_data, file = here("data/peptide-detail-ci.csv.gz"))
+```
+
+Subsetting the important variables
+
+```{r}
+peptide_data <- peptide_data |> 
+  select(c(`TCR BioIdentity`, Experiment, `Amino Acids`))
+```
+
+Sampling
+
+```{r}
+peptide_data |> 
+  sample_n(10)
+```
+
+# Q4
+
+Not tidy data as we have more than one value per cell.
+
+# Q5
+
+We need to split up the `TCR BioIdentity` variable into several variables where we split on the `+` using the `separate_wider_delim` with `cols` selecting the variable that we want to split. `delim` the delimiter used and `names` describing the different names that the newly formed variables/columns should take.
+
+```{r}
+peptide_data <- peptide_data |> 
+separate_wider_delim(cols = `TCR BioIdentity`, 
+                     delim = "+", 
+                     names =  c("CDR3b", "V_gene", "J_gene"))
+
+```
+
+LESSON: Do not use str\_ commands to split up variables. Instead use the `separate` functions.
+
+```{r}
+peptide_data |> 
+sample_n(10)
+```
+
+# T7
+
+We should now count the amout of peptides per experiment. A proxy of the number of peptides in each experiment is the number of commas in `Amino Acids` + 1. Counting the number of peptides per experiment by counting the amount of commas "," using `str_count()` and then adding 1 to the count.
+
+```{r}
+peptide_data <- peptide_data |> 
+mutate(n_peptides = 1 + str_count(string = `Amino Acids`, pattern = ","))
+```
+
+# T8
+
+Making plot with number of peptides per observation on x and Counts on y. Using `group_by()`.
+
+```{r}
+peptide_data |> 
+  group_by(n_peptides) |> 
+  summarize(n = n()) |> 
+  ggplot(mapping = aes(x = n_peptides, 
+                       y = n)) + 
+  geom_col(fill = "grey",
+           color = "black") + 
+  scale_x_continuous(breaks = seq(1,13,1)) + 
+  theme_bw() + 
+  geom_hline(yintercept = 0) + 
+  labs(x = "Number of peptides per experiment",
+       y = "Counts") +
+  theme(panel.border = element_blank(), 
+        panel.grid.major.x = element_blank(), 
+        panel.grid.minor.x = element_blank()) + 
+  theme(axis.ticks = element_blank()) +
+  theme(axis.text.x = element_text(hjust = 0))
+```
+
+LESSON: Use the `theme(panel_border)` to modify if the plot should have any panels (box) around it. We use the `geom_hline` to get a horizontal line to make a nice x-axis.
+
+# Q4
+
+I guess the maximum number of peptides assigned to one observation would be ´r max(peptide_data\$n_peptides)`so we have use the`max()\` function here using in line R-code in the Quarto document for dynamic reporting.
+
+#T9 Creating new variables "peptide_1" etc from `str_c` and `seq`. So `str_c` is a function that concatenates string.
+
+```{r}
+str_c("peptide", seq(from = 1,to = 5, by = 1), sep = "_")
+
+str_c("peptide", c(1, 2, 3, 4, 5), sep = "_")
+```
+
+LESSON: Each element before the `sep` argument is looped over to create a new string. So I you want to concatenate a single string with varying strings afterwards you need to apply these string inside a concatenation `c()` in the function.
+
+# T10
+
+We need to separate the `Amino Acids` variable on the "," and create variables based on those. We should use the `separate_wider_delim` and not longer, as we want to apply more variables than the ones thar already exist.
+
+```{r}
+peptide_data <- peptide_data |> 
+separate_wider_delim(cols = `Amino Acids`, 
+                     delim = ",", 
+                     names = str_c("peptide", 
+                                   seq(from = 1, 
+                                       to = max(peptide_data$n_peptides)), 
+                                   sep = "_"),
+                     too_few = "debug")
+```
+
+LESSON: *Read documentation properly* and for the specific functionality of `separate_delim_wider` it is a good idea to apply the `too_few = "debug"` argument. This presumably gives a warning, when some variables are not filled in but still runs the code. If the argument is not passed the code is not run.
+
+# Q5
+
+Yes, we got the warning. Probably because we generate som observations with NAs as some experiments only include one peptide and not the maximum of 13.
+
+# Q6
+
+I think we should discuss not the `n_peptide` but instead the `peptide_data`, and yes it is in wide format. We would like to pivot it longer to generate a variable termed `peptide_no`.
+
+# T11
+
+Running `sample_n` several times with different values of n.
+
+```{r}
+peptide_data |> 
+  sample_n(size = 1)
+```
+
+So the argument `size` indicates how many observations from the dataframe that you want to extract.
+
+# T12
+
+Testing our `pivot_longer` functions on the data by using first `sample_n` to extract some of the data. The `values_drop_na` arguments is set to TRUE, as we want the pivoting function to drop observations that have NAs int eh `values_to` column, which in this pivoting is `peptide`. So observations with `NA` in `peptide` are removed.
+
+```{r}
+peptide_data |> 
+  sample_n(size = 100) |> 
+  pivot_longer(cols = c("peptide_1":"peptide_13"), 
+               names_to = "peptide_n", 
+               values_to = "peptide", 
+               values_drop_na = TRUE) |> 
+  select(!c(`Amino Acids_ok`, `Amino Acids_pieces`, `Amino Acids_remainder`))
+
+```
+
+LESSON: Use `values_drop_na` to ditch observations with NA in the value variable.
+
+# Q7
+
+The `NA`s arise as some of the experiments do not have the maximum of 13 peptides in the experiment.
+
+# Making the entire `peptide_data` a long format
+
+```{r}
+peptide_data <- peptide_data |> 
+  pivot_longer(cols = c("peptide_1":"peptide_13"), 
+               names_to = "peptide_n", 
+               values_to = "peptide",
+               values_drop_na = TRUE) |> 
+  select(!c(`Amino Acids_ok`, `Amino Acids_pieces`, `Amino Acids_remainder`, `Amino Acids`))
+```
+
+# Q8
+
+The number of rows and columns are
+
+```{r}
+dim(peptide_data)
+
+```
+
+596637 rows with 8 columns. We many more rows, as we have used the `Amino Acids` variable which was split up using the `separate_wider_delim` to create more columns/variables and then we have pivoted this more wide dataframe into a longer dataframe.
+
+# T13
+
+Deselecting the redundant `n_peptides`and `peptide_n`.
+
+```{r}
+peptide_data <- peptide_data |> 
+  select(!c(n_peptides, peptide_n))
+```
+
+We also want to drop the observations that have an `NA` in the `peptide` column. We do this using the `drop_na` function on the `peptide` variable.
+
+```{r}
+peptide_data <- peptide_data |> 
+  drop_na(peptide)
+```
+
+Probably already did this in the `pivot_longer` call.
+
+Checking the dimensions
+
+```{r}
+dim(peptide_data)
+```
+
+We had more then 2 million observations, and now we are down to just 596637 observations and just 5 variables. And now the data is tidy, as we have one peptide per row and that is what we are looking for. ACTUALLY I´M A LITTLE BIT IN DOUBT ABOUT THIS, AS WE HAVE SOME VALUES THAT ARE THE SAME IN DIFFERENT OBSERVATIONS.
+
+# T14
+
+We need to identify if both the `CDR3b` and the `peptide` contain only the proteogenic amino acids. If they do not, they should be filtered out from the analysis. So we need to employ `str_detect`. But the `pattern` argument is special, as we provide the call to `[^ARNDCQEGHILKMFPSTWYV]`, which is a regular expression. Explanation: The hard brackets \[ \] are provided so tell `str_detect` that it should search for each of the elements in the `[^ARNDCQEGHILKMFPSTWYV]` meaning that the function should search for the presence of A to V elements individually, not as a whole string. The \^ is provided to negate the class (negating operator). This means that your are detecting/looking for elements in the vectors provided that are NOT included in the string in the \[\]. This means that with the command below we are looking for if there is patterns in the `CDR3b` and the `peptide` that are not contained in the `[^ARNDCQEGHILKMFPSTWYV]` vector. The `negate`argument reverses the selection. Below we set it to TRUE, as we do not want to filter out on observations that contain non-amino acids.
+
+```{r}
+peptide_data <- peptide_data |> 
+filter(!(str_detect(string = peptide, pattern = "[^ARNDCQEGHILKMFPSTWYV]", negate = F) | 
+         str_detect(string = CDR3b, pattern = "[^ARNDCQEGHILKMFPSTWYV]", negate = F)))
+
+
+```
+
+LESSON: You can't apply `str_detect` to several vectors at once. You need to use \|, & instead. The most important is that we have learnt how to use the \[\] to match not for a complete string but instead just to match for single elements within a vector. We have learnt that \^ is a negating operator meaning that we are looking for elements thar are NOT in the following expression. We use the ! the deselect observations that match the expression within `filter`.
+
+# T15
+
+We now add the variable `k_CDR3_b` and `k_peptide` which signifies the length of each of the respective sequences. Use the `str_length` and `mutate`.
+
+```{r}
+peptide_data <- peptide_data |> 
+  mutate(k_CDR3_b = str_length(string = CDR3b),
+         k_peptide = str_length(string = peptide))
+```
+
+# T16
+
+We will now create a histogram depicting the distribution of the number of `k_CDR3_b` with different lengths. We set the binwidth = 1, as we want all lengths to be mapped.
+
+```{r}
+ggplot(data = peptide_data, 
+       mapping = aes(x = k_CDR3_b)) + 
+  geom_histogram(binwidth = 1, 
+                 alpha = 0.5, 
+                 color = "black") + 
+  theme_bw() +
+  geom_hline(yintercept = 0) + 
+  theme(panel.border = element_blank())
+
+```
+
+# Q9
+
+The predominant length of the ´CDR3_b\` sequences is calculated by
+
+```{r}
+peptide_data |> 
+  group_by(k_CDR3_b) |>
+  summarise(n = n()) |> 
+  arrange(desc(n))
+```
+
+We find that the most predominant length is 15 AA with 135465 having this length.
+
+# T17
+
+Creating plot with k_peptide on x-axis in a histogram
+
+```{r}
+ggplot(data = peptide_data, 
+       mapping = aes(x = k_peptide)) + 
+  geom_histogram(binwidth = 1, 
+                 alpha = 0.5, 
+                 color = "black") + 
+  theme_bw() +
+  geom_hline(yintercept = 0) + 
+  theme(panel.border = element_blank())
+```
+
+# Q10
+
+The most predominant peptide sequence is evidently 9 amino acids, but we do the calculation anyhow
+
+```{r}
+peptide_data |> 
+  group_by(k_peptide) |>
+  summarise(n = n()) |> 
+  arrange(desc(n))
+```
+
+With 310915 peptides of length 9 this is the most predominant length.
+
+# Q11
+
+```{r}
+peptide_data |> 
+  sample_n(10)
+
+
+```
+
+I would say that it is tidy. One value per cell, and one observation per row and one variable per column. I TCR could be detected in several rows, but then it would map to a different peptide or a different experiment.
+
+# Q12
+
+The data is in a wide format. We could for example easily make a pivot longer, where we converge on the A1 to C2 and make these into a column names `HLA-alleles`.
+
+# T18
+
+Haha, yeah that is exactly what the teachers suggest but we just use the `names_to = "Gene"` instead.
+
+```{r}
+meta_data <- meta_data |> 
+  pivot_longer(cols = c("A1":"C2"),
+               names_to = "Gene", 
+               values_to = "Allele")
+```
+
+```{r}
+meta_data |> 
+  sample_n(10)
+```
+
+# Q13
+
+Only the `Experiment` variable is shared between the two dataframes so this variable defines the two observations.
+
+# Subsetting meta_data
+
+To get only `Experiment`and `Allele`.
+
+```{r}
+meta_data <- meta_data |> 
+  select(Experiment, Allele)
+```
+
+```{r}
+meta_data |> 
+  sample_n(10)
+```
+
+# T19
+
+So in the `Allele` variable we only need to extract the first 7 characters in the string. To do this we use the function `str_sub` where we subset from character number 1 to character number 7 to get the name of `Allele_F_1_2`. We `drop_na` on the `Allele_F_1_2` and filter out `Allele_F_1_2` that have no values i.e. `""`.
+
+```{r}
+meta_data <- meta_data |> 
+mutate(Allele_F_1_2 = str_sub(Allele, start = 1, end = 7)) |> 
+  drop_na(Allele_F_1_2) |> 
+  filter(!Allele_F_1_2 == "")
+```
+
+LESSON: Use `str_sub` (substrings) to extract strings from the `start` and the `end` position in the vector you provided.
+
+# T20
+
+We need to remove the asterisks \* and the redundant variables. I guess that the variables that we should remove are is just the `Allele` variable. To remove the asterisk we use `str_remove`.
+
+```{r}
+meta_data <- meta_data |> 
+  select(-Allele) |> 
+  mutate(Allele_F_1_2 = str_remove(string = Allele_F_1_2, pattern = "\\*"))
+```
+
+LESSONS: First thing is that you need to provide the varialbe that you want to recode in a `mutate` verb. It does not help to just put it like `meta_data |> str_remove(string = vector, pattern = "pattern"). Second and very important lesson is that you need to escape the character ambiguity in`\*`. You do this by double backslashes`\\\`
+
+#T21 Creating a `dplyr` pipeline which starts with the `peptide_data`and joins on `meta_data`. We apply `unique` to get only unique observations.
+
+```{r}
+peptide_meta_data <- meta_data |> 
+  inner_join(y = peptide_data, by = "Experiment") |> 
+  unique()
+```
+
+```{r}
+peptide_meta_data |> 
+  sample_n(10)
+```
+
+We will now use `ggseqlogo` to show the binding affinity of the different amino acids in nonamer epitopes to HLA-A2:01. First we need to filter for observations that only look at nonamers e.g. k_peptide == 9 and then we need to select for HLA-A\*02:01. Finally, as the `ggseqlogo` takes out a vector we need to pull the peptide sequences using the `pull` function.
+
+```{r}
+peptide_meta_data |> 
+  filter(k_peptide == 9 & Allele_F_1_2 == "A02:01") |> 
+  pull(peptide) |> 
+ggseqlogo()
+```
+
+# T23
+
+Doing the same for HLA-B\*07:02
+
+```{r}
+peptide_meta_data |> 
+  filter(k_peptide == 9 & Allele_F_1_2 == "B07:02") |> 
+  pull(peptide) |> 
+  ggseqlogo()
+```
+
+# Q14
+
+Not as clear here since I have made an error at some point, but we know that residues 2 and 9 are anchor residues for HLA-I alleles.
+
+# T24
+
+We now look at the T-cell receptor with a length of the CDR3b that is 15 amino acids and binds to the peptide with the sequence LLFLVLIML presented by HLA-A2:01. So we need to filter for several parameters.
+
+```{r}
+peptide_meta_data |> 
+  filter(k_CDR3_b == 15 & Allele_F_1_2 == "A02:01" & peptide == "LLFLVLIML") |> 
+  pull(CDR3b) |> 
+  ggseqlogo()
+
+
+```
+
+Okay, we should play around with even more TCR-sequences, HLA-types and HLA-alleles. Kind of irrelevant. What is the most interesting is which peptides bind most strongly to the different HLA-classes. We chose the longest CDR3_b for HLA-A3 and nonamer epitopes.
+
+```{r}
+peptide_meta_data |> 
+  filter(Allele_F_1_2 == "A03:01" & k_peptide == 9) |> 
+  filter(k_CDR3_b == max(k_CDR3_b)) |> 
+  pull(CDR3b) |> 
+  ggseqlogo()
+
+
+```
+
+So not-interesting! Only one TCR.
+
+Looking at the length of the TCR of 14 aa for A201 restricted nonamers.
+
+```{r}
+peptide_meta_data |> 
+  filter(Allele_F_1_2 == "A02:01" & k_peptide == 9 & k_CDR3_b ==14) |> 
+  pull(CDR3b) |> 
+  ggseqlogo()
+```
+
+Honestly, it is more interesting to look at peptide binding motifs to frequenlty occurring HLA-alleles. Looking at HLA-A*03, HLA-A*26, HLA-B*27:02 and HLA-B*57.
+
+# A\*03:01 nonamers
+
+```{r}
+peptide_meta_data |> 
+  filter(Allele_F_1_2 == "A03:01" & k_peptide == 9) |> 
+  pull(peptide) |> 
+  ggseqlogo()
+```
+
+# B\*27:02
+
+```{r}
+peptide_meta_data |> 
+  filter(Allele_F_1_2 == "B27:02" & k_peptide == 9) |> 
+  pull(peptide) |> 
+  ggseqlogo()
+```
+
+# HLA-A26
+
+```{r}
+peptide_meta_data |> 
+  filter(Allele_F_1_2 == "A26:01" & k_peptide == 9) |> 
+  pull(peptide) |> 
+  ggseqlogo()
+```
+
+# HLA-B\*57:01
+
+```{r}
+peptide_meta_data |> 
+  filter(Allele_F_1_2 == "B57:01" & k_peptide == 9) |> 
+  pull(peptide) |> 
+  ggseqlogo()
+```
+
+# Comment on the disclaimer:
+
+It would be nice to include the clinical data in the analysis.
