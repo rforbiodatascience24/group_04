@@ -12,3 +12,12 @@ editor: visual
 # Nitjay
 
 # Morten 
+
+```{r}
+library(tidyverse)
+
+ggplot(data = iris, 
+       mapping = aes(x = Sepal.Length, 
+                     y = Petal.Length)) + 
+  geom_point()
+```
