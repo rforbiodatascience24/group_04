@@ -5,6 +5,10 @@ format: html
 editor: visual
 ---
 
+```{r}
+library(tidyverse)
+```
+
 # Edir
 
 Hola buenos dias
