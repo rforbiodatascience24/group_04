@@ -23,6 +23,12 @@ print('Hello world')
 2+2*5*222
 ```
 
+## New feature:
+
+```{r}
+print('Tiamisu')
+```
+
 # Nitjay
 
 Here is some random r code
