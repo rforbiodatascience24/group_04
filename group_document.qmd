@@ -13,6 +13,14 @@ library(tidyverse)
 
 Hola buenos dias
 
+### New analysis
+
+```{r}
+x = c(89, 79, 70, 86, 85, 30, 86, 88, 89)
+
+x_mean = mean(x)
+```
+
 # Thea
 
 ```{r}
