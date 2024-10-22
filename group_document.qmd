@@ -7,19 +7,33 @@ editor: visual
 
 # Edir
 
+Hola buenos dias
+
 # Thea
 
 ```{r}
-print("hello world")
+print('Hello world')
 ```
 
 ```{r}
-2+2+5*9999
+2+2*5*222
 ```
 
 # Nitjay
 
+Here is some random r code
+
+```{r}
+x <- 1:10
+y <- 2:11
+sum = x+y
+print(sum)
+
+```
+
 # Morten
+
+> > > > > > > 8fadc22dbecb443504ce00a16305eb1d569b9f43
 
 ```{r}
 library(tidyverse)
